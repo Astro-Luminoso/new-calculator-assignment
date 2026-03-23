@@ -24,11 +24,6 @@ public class Main {
 
             calculator.printRecord(record);
             calculator.addRecord(record);
-
-
-
         }
     }
-
-
 }
