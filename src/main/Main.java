@@ -15,14 +15,15 @@ public class Main {
         Calculator calculator = new Calculator(sc, records);
 
         // system exit is implemented in Calculator class
-        while(true) {
+        while (true) {
 
-            calculator.setUpOperands();
-            calculator.setUpOperator();
-            calculator.calculate();
+            int lhs = calculator.getOperand();
+            int rhs = calculator.getOperand();
+            char operator = calculator.getOperator();
+            CalculationRecord record = calculator.calculate(lhs, rhs, operator);
 
+            calculator.printRecord(record);
+            calculator.addRecord(record);
         }
     }
-
-
 }
