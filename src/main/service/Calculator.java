@@ -21,10 +21,6 @@ public class Calculator {
     // record previous calculations
     private final List<CalculationRecord> records;
 
-    private int lhs;
-    private int rhs;
-    private char operator;
-
     // constant value to control input validation
     private static final String OPERAND_CONSTRAINT = "OPERAND";
     private static final String OPERATOR_CONSTRAINT = "OPERATOR";
@@ -103,35 +99,47 @@ public class Calculator {
     }
 
     /**
-     * set up operands by user input
+     * get an operand as string value from scanner and parse it to integer
      * <br/>
-     * 사용자 입력으로 피연산자를 설정
+     * 사용자 입력으로 피연산자를 반환
+     *
+     * @return integer value of operand (피연산자의 정수 값)
      */
-    public void setUpOperands() {
-        this.lhs = Integer.parseInt(this.getValue(OPERAND_CONSTRAINT));
-        this.rhs = Integer.parseInt(this.getValue(OPERAND_CONSTRAINT));
+    public int getOperand() {
+
+        System.out.println("양의 정수를 입력하여 주시옵소서.");
+        return Integer.parseInt(this.getValue(OPERAND_CONSTRAINT));
     }
 
     /**
-     * set up an operator of calculation by user input
+     * get an operator of calculation from scanner and return input value as character
      * <br/>
      * 사용자 입력으로 계산의 연산자를 설정
+     *
+     * @return character value of operator (연산자의 문자 값)
      */
-    public void setUpOperator() {
-        this.operator = this.getValue(OPERATOR_CONSTRAINT).charAt(0);
+    public char getOperator() {
+
+        System.out.println("연산자를 입력하여 주시옵소서. 지원하는 연산자는 +, -, *, / 이옵니다.");
+        return this.getValue(OPERATOR_CONSTRAINT).charAt(0);
     }
 
     /**
      * calculate based on user input
      * <br/>
      * 사용자의 입력값을 기반으로 계산한다
+     *
+     * @param lhs left-hand side operand (좌항 피연산자)
+     * @param rhs right-hand side operand (우항 피연산자)
+     * @param operator operator for calculation (계산을 위한 연산자)
+     * @return a CalculationRecord object that contains the calculation result (계산 결과를 담은 CalculationRecord 객체)
      */
-    public void calculate() {
+    public CalculationRecord calculate(int lhs, int rhs, char operator) {
 
         CalculationRecord record = null;
 
         try {
-            switch (this.operator) {
+            switch (operator) {
                 case '+' -> record = new CalculationRecord(lhs, rhs, operator, lhs + rhs);
                 case '-' -> record = new CalculationRecord(lhs, rhs, operator, lhs - rhs);
                 case '*' -> record = new CalculationRecord(lhs, rhs, operator, lhs * rhs);
@@ -147,7 +155,28 @@ public class Calculator {
             System.out.println(e.getMessage());
         }
 
+        return record;
+    }
+
+    /**
+     * print calculation record to console
+     * <br />
+     * 계산 기록을 콘솔에 출력
+     *
+     * @param record a CalculationRecord object to be printed (출력할 CalculationRecord 객체)
+     */
+    public void printRecord(CalculationRecord record) {
+
         System.out.println(record);
+    }
+
+    /**
+     * add calculator record into the record list
+     * <br />
+     * 계산 기록을 기록 리스트에 추가
+     * @param record a CalculationRecord object to be added (출력할 CalculationRecord 객체)
+     */
+    public void addRecord(CalculationRecord record) {
         this.records.add(record);
     }
 }
