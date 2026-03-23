@@ -31,7 +31,7 @@ public class Calculator {
         try {
             switch (constraint) {
                 case OPERAND_CONSTRAINT:
-                    if (!value.matches("\\d"))
+                    if (!value.matches("-?\\d+"))
                         throw new UnauthorizedInputException("입력값이 유효하지 않사옵니다. 다시 입력하여 주시옵소서.");
                     else if (value.contains("-"))
                         throw new NotAllowedInputException("음의 정수는 입력할 수 없사옵니다.");
