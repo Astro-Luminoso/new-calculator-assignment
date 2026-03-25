@@ -1,19 +1,21 @@
 
 package main.service;
 
-import main.Exception.NotAllowedInputException;
 import main.Exception.UnauthorizedInputException;
 import main.dmo.CalculationRecord;
+import main.enumerate.OperatorType;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.Function;
 
 /**
  * An actual class to run calculator program
  * <br/>
  * 계산기 프로그램을 실제로 실행하는 클래스
  */
-public class Calculator {
+public class Calculator <T extends Number> {
 
 
     private final Scanner scanner;
@@ -21,10 +23,7 @@ public class Calculator {
     // record previous calculations
     private final List<CalculationRecord> records;
 
-    // constant value to control input validation
-    private static final String OPERAND_CONSTRAINT = "OPERAND";
-    private static final String OPERATOR_CONSTRAINT = "OPERATOR";
-
+    private final Function<String, T> parser;
 
     /**
      * Calculator Class Constructor
@@ -32,69 +31,50 @@ public class Calculator {
      * 클래스 Calculator 생성자
      *
      * @param scanner a Scanner object to receive user input (사용자 입력을 받기 위한 Scanner 객체)
-     * @param records a List to store previous calculation records (이전 계산 기록을 저장하기 위한 List)
+     * @param parser a function object to parse string value to number type (문자열 값을 숫자 타입으로 변환하기 위한 함수 객체)
      */
-    public Calculator(Scanner scanner, List<CalculationRecord> records) {
+    public Calculator(Scanner scanner, Function<String, T> parser) {
         this.scanner = scanner;
-        this.records = records;
+        this.records = new ArrayList<>();
+        this.parser = parser;
     }
 
     /**
-     * inspect user input value
-     * <br/>
-     * 사용자의 입력값을 검사
+     * a method to get user
+     * 사용자 입력을 받는 메소드
      *
-     * @param constraint a string value to determine which constraint to apply (어떤 제약조건을 적용할지 결정하기 위한 문자열 값)
-     * @param value user input value (사용자의 입력값)
-     * @return true if the value is valid, false otherwise (값이 유효하면 true, 그렇지 않으면 false)
-     */
-    private boolean sanitizeValue(String constraint, String value) {
-
-        try {
-            switch (constraint) {
-                case OPERAND_CONSTRAINT:
-                    if (!value.matches("-?\\d+"))
-                        throw new UnauthorizedInputException("입력값이 유효하지 않사옵니다. 다시 입력하여 주시옵소서.");
-                    else if (value.contains("-"))
-                        throw new NotAllowedInputException("음의 정수는 입력할 수 없사옵니다.");
-                    else if (value.contains("."))
-                        throw new NotAllowedInputException("소수는 입력할 수 없사옵니다.");
-                    break;
-                case OPERATOR_CONSTRAINT:
-                    if (!value.matches("[+\\-*/]"))
-                        throw new UnauthorizedInputException("지원하지 않는 연산자이옵니다. 다시 입력하여 주시옵소서.");
-                    break;
-            }
-        } catch (NotAllowedInputException | UnauthorizedInputException e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * a method to get user input until the value is valid
-     * <br/>
-     * 값이 유효할 때까지 사용자 입력을 받는 메소드
-     *
-     * @param constraint a string value to determine which constraint to apply (어떤 제약조건을 적용할지 결정하기 위한 문자열 값)
      * @return a string value of user input (유저의 입력값의 문자열 값)
      */
-    private String getValue(String constraint) {
+    private String getValue() {
 
-        boolean keepLooping = true;
-        String result = null;
-
-        while (keepLooping) {
-            result = scanner.nextLine();
-
-            if(result.equals("exit")) System.exit(0);
-            if(this.sanitizeValue(constraint, result))
-                keepLooping = false;
+        String value = scanner.nextLine();
+        if (value.equalsIgnoreCase("exit")) {
+            System.out.println("계산기를 종료하옵니다. 이용해주셔서 성은이 망극하옵나이다.");
+            System.exit(0);
         }
 
-        return result;
+        return value;
+    }
+
+
+    /**
+     * get user input with regex constraint until the value is valid
+     * <br />
+     * regex 제약 조건을 만족하는 유효한 입력값이 나올 때까지 사용자 입력을 받는 메소드
+     *
+     * @param regex a regular expression to validate user input (사용자 입력값의 유효성을 검증하기 위한 정규 표현식)
+     * @return String value of user input that satisfies the regex constraint (regex 제약 조건을 만족하는 사용자 입력값의 문자열 값)
+     */
+    private String getValue(String regex) {
+
+        String value = this.getValue();
+
+        if (value.matches(regex)) {
+            return value;
+        } else {
+            throw new UnauthorizedInputException();
+        }
+
 
     }
 
@@ -105,10 +85,16 @@ public class Calculator {
      *
      * @return integer value of operand (피연산자의 정수 값)
      */
-    public int getOperand() {
+    public T getOperand() {
 
-        System.out.println("양의 정수를 입력하여 주시옵소서.");
-        return Integer.parseInt(this.getValue(OPERAND_CONSTRAINT));
+        System.out.println("숫자를 입력하여 주시옵소서.");
+        while(true) {
+            try {
+                return this.parser.apply(this.getValue("^-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)$"));
+            } catch (UnauthorizedInputException e) {
+                System.out.println(e.getMessage());
+            }
+        }
     }
 
     /**
@@ -118,10 +104,21 @@ public class Calculator {
      *
      * @return character value of operator (연산자의 문자 값)
      */
-    public char getOperator() {
+    public OperatorType getOperator() {
 
-        System.out.println("연산자를 입력하여 주시옵소서. 지원하는 연산자는 +, -, *, / 이옵니다.");
-        return this.getValue(OPERATOR_CONSTRAINT).charAt(0);
+        OperatorType type = null;
+
+        System.out.println("연산자를 입력하여 주시옵소서. +, -, *, / 중 하나를 입력해주시옵소서.");
+        while (type == null) {
+            try {
+
+                type = OperatorType.getOperator(this.getValue().charAt(0));
+            } catch (UnauthorizedInputException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+        return type;
     }
 
     /**
@@ -134,28 +131,10 @@ public class Calculator {
      * @param operator operator for calculation (계산을 위한 연산자)
      * @return a CalculationRecord object that contains the calculation result (계산 결과를 담은 CalculationRecord 객체)
      */
-    public CalculationRecord calculate(int lhs, int rhs, char operator) {
+    public CalculationRecord calculate(T lhs, T rhs, OperatorType operator) {
 
-        CalculationRecord record = null;
-
-        try {
-            switch (operator) {
-                case '+' -> record = new CalculationRecord(lhs, rhs, operator, lhs + rhs);
-                case '-' -> record = new CalculationRecord(lhs, rhs, operator, lhs - rhs);
-                case '*' -> record = new CalculationRecord(lhs, rhs, operator, lhs * rhs);
-                case '/' -> {
-                    if (rhs == 0) {
-                        throw new ArithmeticException("0으로 나누는 행위는 아니되옵니다.");
-
-                    }
-                    record = new CalculationRecord(lhs, rhs, operator, lhs / rhs);
-                }
-            }
-        } catch (ArithmeticException e) {
-            System.out.println(e.getMessage());
-        }
-
-        return record;
+        return new CalculationRecord (
+                lhs.doubleValue(), rhs.doubleValue(), operator, operator.calculate(lhs.doubleValue(), rhs.doubleValue()));
     }
 
     /**
