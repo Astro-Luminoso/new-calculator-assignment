@@ -2,6 +2,7 @@
 package main.service;
 
 import main.Exception.UnauthorizedInputException;
+import main.cli.CliController;
 import main.dmo.CalculationRecord;
 import main.enumerate.OperatorType;
 
@@ -15,14 +16,11 @@ import java.util.function.Function;
  * <br/>
  * 계산기 프로그램을 실제로 실행하는 클래스
  */
-public class Calculator <T extends Number> {
-
-
-    private final Scanner scanner;
+public class CalculatorManager<T extends Number> {
 
     // record previous calculations
     private final List<CalculationRecord> records;
-
+    private final CliController scanner;
     private final Function<String, T> parser;
 
     /**
@@ -33,49 +31,10 @@ public class Calculator <T extends Number> {
      * @param scanner a Scanner object to receive user input (사용자 입력을 받기 위한 Scanner 객체)
      * @param parser a function object to parse string value to number type (문자열 값을 숫자 타입으로 변환하기 위한 함수 객체)
      */
-    public Calculator(Scanner scanner, Function<String, T> parser) {
+    public CalculatorManager(CliController scanner, Function<String, T> parser) {
         this.scanner = scanner;
         this.records = new ArrayList<>();
         this.parser = parser;
-    }
-
-    /**
-     * a method to get user
-     * 사용자 입력을 받는 메소드
-     *
-     * @return a string value of user input (유저의 입력값의 문자열 값)
-     */
-    private String getValue() {
-
-        String value = scanner.nextLine();
-        if (value.equalsIgnoreCase("exit")) {
-            System.out.println("계산기를 종료하옵니다. 이용해주셔서 성은이 망극하옵나이다.");
-            System.exit(0);
-        }
-
-        return value;
-    }
-
-
-    /**
-     * get user input with regex constraint until the value is valid
-     * <br />
-     * regex 제약 조건을 만족하는 유효한 입력값이 나올 때까지 사용자 입력을 받는 메소드
-     *
-     * @param regex a regular expression to validate user input (사용자 입력값의 유효성을 검증하기 위한 정규 표현식)
-     * @return String value of user input that satisfies the regex constraint (regex 제약 조건을 만족하는 사용자 입력값의 문자열 값)
-     */
-    private String getValue(String regex) {
-
-        String value = this.getValue();
-
-        if (value.matches(regex)) {
-            return value;
-        } else {
-            throw new UnauthorizedInputException();
-        }
-
-
     }
 
     /**
@@ -84,13 +43,18 @@ public class Calculator <T extends Number> {
      * 사용자 입력으로 피연산자를 반환
      *
      * @return integer value of operand (피연산자의 정수 값)
+     *
      */
-    public T getOperand() {
-
-        System.out.println("숫자를 입력하여 주시옵소서.");
+     public T getOperand() {
         while(true) {
+
             try {
-                return this.parser.apply(this.getValue("^-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)$"));
+                String value = scanner.getValue("숫자를 입력하여 주시옵소서.", "^(?:-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)|#)$");
+
+                if (value.equals("#")) return null; // cancel button
+
+                return this.parser.apply(value);
+
             } catch (UnauthorizedInputException e) {
                 System.out.println(e.getMessage());
             }
@@ -108,11 +72,13 @@ public class Calculator <T extends Number> {
 
         OperatorType type = null;
 
-        System.out.println("연산자를 입력하여 주시옵소서. +, -, *, / 중 하나를 입력해주시옵소서.");
+        System.out.println();
         while (type == null) {
             try {
+                char value = scanner.getValue("연산자를 입력하여 주시옵소서. +, -, *, / 중 하나를 입력해주시옵소서.").charAt(0);
+                if (value == '#') return null;
 
-                type = OperatorType.getOperator(this.getValue().charAt(0));
+                type = OperatorType.getOperator(value);
             } catch (UnauthorizedInputException e) {
                 System.out.println(e.getMessage());
             }
@@ -137,17 +103,6 @@ public class Calculator <T extends Number> {
                 lhs.doubleValue(), rhs.doubleValue(), operator, operator.calculate(lhs.doubleValue(), rhs.doubleValue()));
     }
 
-    /**
-     * print calculation record to console
-     * <br />
-     * 계산 기록을 콘솔에 출력
-     *
-     * @param record a CalculationRecord object to be printed (출력할 CalculationRecord 객체)
-     */
-    public void printRecord(CalculationRecord record) {
-
-        System.out.println(record);
-    }
 
     /**
      * add calculator record into the record list
@@ -155,7 +110,31 @@ public class Calculator <T extends Number> {
      * 계산 기록을 기록 리스트에 추가
      * @param record a CalculationRecord object to be added (출력할 CalculationRecord 객체)
      */
-    public void addRecord(CalculationRecord record) {
+    private void addRecord(CalculationRecord record) {
         this.records.add(record);
+    }
+
+    public void compute() {
+        T lhs = this.getOperand();
+        T rhs = this.getOperand();
+        OperatorType operator = this.getOperator();
+
+        if (lhs == null || rhs == null || operator == null) return;
+
+        CalculationRecord record = this.calculate(lhs, rhs, operator);
+
+        scanner.cliPrint(record);
+        this.addRecord(record);
+    }
+
+    public int getMenu() {
+
+        String value = scanner.getValue("메뉴를 입력하여 주시옵소서. 1: 계산하기, 2: 기록 보기, 3: 기록 삭제, 4: 프로그램 종료, 5: 메뉴 보기");
+
+        if(value.matches("^[1-5]$")) {
+            return Integer.parseInt(value);
+        } else {
+            throw new UnauthorizedInputException();
+        }
     }
 }
