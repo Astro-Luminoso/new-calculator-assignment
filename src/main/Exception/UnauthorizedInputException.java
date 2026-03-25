@@ -7,6 +7,9 @@ package main.Exception;
  */
 public class UnauthorizedInputException extends IllegalArgumentException {
 
+    public UnauthorizedInputException() {
+        super("올바르지 않은 입력값이옵니다. 다시 입력하여 주시옵소서.");
+    }
     public UnauthorizedInputException(String message) {
         super(message);
     }
