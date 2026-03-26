@@ -12,8 +12,6 @@ import java.util.Scanner;
 import java.util.function.Function;
 
 /**
- * An actual class to run calculator program
- * <br/>
  * 계산기 프로그램을 실제로 실행하는 클래스
  */
 public class CalculatorManager<T extends Number> {
@@ -24,12 +22,12 @@ public class CalculatorManager<T extends Number> {
     private final CalculatorRecorder recorder;
 
     /**
-     * Calculator Class Constructor
-     * <br/>
+
      * 클래스 Calculator 생성자
      *
-     * @param scanner a Scanner object to receive user input (사용자 입력을 받기 위한 Scanner 객체)
-     * @param parser a function object to parse string value to number type (문자열 값을 숫자 타입으로 변환하기 위한 함수 객체)
+     * @param scanner 사용자 입력을 받기 위한 Scanner 객체
+     * @param parser 문자열 값을 숫자 타입으로 변환하기 위한 함수 객체
+     * @param recorder 계산 기록 관리를 위한 객체
      */
     public CalculatorManager(CliController scanner, Function<String, T> parser, CalculatorRecorder recorder) {
         this.scanner = scanner;
@@ -38,12 +36,9 @@ public class CalculatorManager<T extends Number> {
     }
 
     /**
-     * get an operand as string value from scanner and parse it to integer
-     * <br/>
      * 사용자 입력으로 피연산자를 반환
      *
-     * @return integer value of operand (피연산자의 정수 값)
-     *
+     * @return 피연산자의 정수 값
      */
      private T getOperand() {
         while(true) {
@@ -62,11 +57,9 @@ public class CalculatorManager<T extends Number> {
     }
 
     /**
-     * get an operator of calculation from scanner and return input value as character
-     * <br/>
      * 사용자 입력으로 계산의 연산자를 설정
      *
-     * @return character value of operator (연산자의 문자 값)
+     * @return 연산자의 문자 값
      */
     private OperatorType getOperator() {
 
@@ -88,14 +81,12 @@ public class CalculatorManager<T extends Number> {
     }
 
     /**
-     * calculate based on user input
-     * <br/>
      * 사용자의 입력값을 기반으로 계산한다
      *
-     * @param lhs left-hand side operand (좌항 피연산자)
-     * @param rhs right-hand side operand (우항 피연산자)
-     * @param operator operator for calculation (계산을 위한 연산자)
-     * @return a CalculationRecord object that contains the calculation result (계산 결과를 담은 CalculationRecord 객체)
+     * @param lhs 좌항 피연산자
+     * @param rhs 우항 피연산자
+     * @param operator 계산을 위한 연산자
+     * @return 계산 결과를 담은 CalculationRecord 객체
      */
     private CalculationRecord calculate(T lhs, T rhs, OperatorType operator) {
 
@@ -104,6 +95,9 @@ public class CalculatorManager<T extends Number> {
     }
 
 
+    /**
+     * 계산 로직을 수행하는 메소드
+     */
     public void compute() {
         T lhs = this.getOperand();
         if (lhs == null) return ;
@@ -117,6 +111,9 @@ public class CalculatorManager<T extends Number> {
         recorder.addRecord(record);
     }
 
+    /**
+     * 계산 기록을 최댓값 기준으로 조회
+     */
     public void queryRecord() {
         String value = null;
         while (value == null) {
@@ -128,14 +125,22 @@ public class CalculatorManager<T extends Number> {
     }
 
 
+    /**
+     * 첫번째 계산 기록을 삭제
+     */
     public void deleteRecord() {
 
         this.recorder.removeRecord();
     }
 
+    /**
+     * 매뉴 옵션을 받는 메소드
+     *
+     * @return 1-3 까지의 정수 그리고 exit 문자열시 -1
+     */
     public int getMenu() {
 
-        String value = scanner.getValue("메뉴를 입력하여 주시옵소서. 1: 계산하기, 2: 기록 보기, 3: 기록 삭제, 4: 프로그램 종료, 5: 메뉴 보기");
+        String value = scanner.getValue("메뉴를 입력하여 주시옵소서. 1: 계산하기, 2: 기록 보기, 3: 기록 삭제, 4: 프로그램 종료");
 
         if(value.equals("exit"))
             return -1;
