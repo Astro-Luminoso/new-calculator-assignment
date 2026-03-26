@@ -6,9 +6,6 @@ import main.cli.CliController;
 import main.dmo.CalculationRecord;
 import main.enumerate.OperatorType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
 import java.util.function.Function;
 
 /**
@@ -116,8 +113,14 @@ public class CalculatorManager<T extends Number> {
      */
     public void queryRecord() {
         String value = null;
+
         while (value == null) {
-             value = scanner.getValue("기록을 조회하시려면 숫자를 입력하여 주시옵소서. 입력한 숫자보다 작은 결과값을 가진 기록이 조회됩니다.", "^(?:-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)|#)$");
+
+            try{
+                value = scanner.getValue("기록을 조회하시려면 숫자를 입력하여 주시옵소서. 입력한 숫자보다 작은 결과값을 가진 기록이 조회됩니다.", "^(?:-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)|#)$");
+            } catch (UnauthorizedInputException e) {
+                scanner.cliPrint(e.getMessage());
+            }
         }
         if (value.equals("#")) return;
 
@@ -131,6 +134,7 @@ public class CalculatorManager<T extends Number> {
     public void deleteRecord() {
 
         this.recorder.removeRecord();
+        scanner.cliPrint("첫 번째 기록이 삭제되었습니다.");
     }
 
     /**
@@ -140,15 +144,21 @@ public class CalculatorManager<T extends Number> {
      */
     public int getMenu() {
 
-        String value = scanner.getValue("메뉴를 입력하여 주시옵소서. 1: 계산하기, 2: 기록 보기, 3: 기록 삭제, 4: 프로그램 종료");
+        int result = -1;
+        while(true) {
+            try {
+                String value = scanner.getValue("메뉴를 입력하여 주시옵소서. 1: 계산하기, 2: 기록 보기, 3: 기록 삭제, exit: 프로그램 종료");
 
-        if(value.equals("exit"))
-            return -1;
+                if (value.equals("exit")) return result;
 
-        if(value.matches("^[1-3]$")) {
-            return Integer.parseInt(value);
-        } else {
-            throw new UnauthorizedInputException();
+                if (value.matches("^[1-3]$")) {
+                    return Integer.parseInt(value);
+                } else {
+                    throw new UnauthorizedInputException();
+                }
+            } catch (UnauthorizedInputException e) {
+                scanner.cliPrint(e.getMessage());
+            }
         }
     }
 }
