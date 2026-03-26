@@ -3,9 +3,9 @@ package main.service;
 public class CalculatorGateway {
 
 
-    private final CalculatorManager manager;
+    private final CalculatorManager<?> manager;
 
-    public CalculatorGateway(CalculatorManager manager) {
+    public CalculatorGateway(CalculatorManager<?> manager) {
 
         this.manager = manager;
     }
@@ -15,9 +15,12 @@ public class CalculatorGateway {
         switch (menu) {
 
             case 1 -> manager.compute();
+            case 2 -> manager.queryRecord();
+            case 3 -> manager.deleteRecord();
+            case -1 -> System.exit(0);
+
         }
     }
-
 
 
     public void run() {
@@ -25,8 +28,6 @@ public class CalculatorGateway {
         while (true) {
 
             this.executeMenu(manager.getMenu());
-
         }
     }
-
 }

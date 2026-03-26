@@ -18,10 +18,10 @@ import java.util.function.Function;
  */
 public class CalculatorManager<T extends Number> {
 
-    // record previous calculations
-    private final List<CalculationRecord> records;
     private final CliController scanner;
     private final Function<String, T> parser;
+
+    private final CalculatorRecorder recorder;
 
     /**
      * Calculator Class Constructor
@@ -31,9 +31,9 @@ public class CalculatorManager<T extends Number> {
      * @param scanner a Scanner object to receive user input (사용자 입력을 받기 위한 Scanner 객체)
      * @param parser a function object to parse string value to number type (문자열 값을 숫자 타입으로 변환하기 위한 함수 객체)
      */
-    public CalculatorManager(CliController scanner, Function<String, T> parser) {
+    public CalculatorManager(CliController scanner, Function<String, T> parser, CalculatorRecorder recorder) {
         this.scanner = scanner;
-        this.records = new ArrayList<>();
+        this.recorder = recorder;
         this.parser = parser;
     }
 
@@ -45,7 +45,7 @@ public class CalculatorManager<T extends Number> {
      * @return integer value of operand (피연산자의 정수 값)
      *
      */
-     public T getOperand() {
+     private T getOperand() {
         while(true) {
 
             try {
@@ -68,7 +68,7 @@ public class CalculatorManager<T extends Number> {
      *
      * @return character value of operator (연산자의 문자 값)
      */
-    public OperatorType getOperator() {
+    private OperatorType getOperator() {
 
         OperatorType type = null;
 
@@ -97,41 +97,50 @@ public class CalculatorManager<T extends Number> {
      * @param operator operator for calculation (계산을 위한 연산자)
      * @return a CalculationRecord object that contains the calculation result (계산 결과를 담은 CalculationRecord 객체)
      */
-    public CalculationRecord calculate(T lhs, T rhs, OperatorType operator) {
+    private CalculationRecord calculate(T lhs, T rhs, OperatorType operator) {
 
         return new CalculationRecord (
                 lhs.doubleValue(), rhs.doubleValue(), operator, operator.calculate(lhs.doubleValue(), rhs.doubleValue()));
     }
 
 
-    /**
-     * add calculator record into the record list
-     * <br />
-     * 계산 기록을 기록 리스트에 추가
-     * @param record a CalculationRecord object to be added (출력할 CalculationRecord 객체)
-     */
-    private void addRecord(CalculationRecord record) {
-        this.records.add(record);
-    }
-
     public void compute() {
         T lhs = this.getOperand();
+        if (lhs == null) return ;
         T rhs = this.getOperand();
+        if (rhs == null) return;
         OperatorType operator = this.getOperator();
-
-        if (lhs == null || rhs == null || operator == null) return;
-
+        if (operator == null) return;
         CalculationRecord record = this.calculate(lhs, rhs, operator);
 
         scanner.cliPrint(record);
-        this.addRecord(record);
+        recorder.addRecord(record);
+    }
+
+    public void queryRecord() {
+        String value = null;
+        while (value == null) {
+             value = scanner.getValue("기록을 조회하시려면 숫자를 입력하여 주시옵소서. 입력한 숫자보다 작은 결과값을 가진 기록이 조회됩니다.", "^(?:-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)|#)$");
+        }
+        if (value.equals("#")) return;
+
+        scanner.cliPrint(recorder.getRecord(Double.parseDouble(value)));
+    }
+
+
+    public void deleteRecord() {
+
+        this.recorder.removeRecord();
     }
 
     public int getMenu() {
 
         String value = scanner.getValue("메뉴를 입력하여 주시옵소서. 1: 계산하기, 2: 기록 보기, 3: 기록 삭제, 4: 프로그램 종료, 5: 메뉴 보기");
 
-        if(value.matches("^[1-5]$")) {
+        if(value.equals("exit"))
+            return -1;
+
+        if(value.matches("^[1-3]$")) {
             return Integer.parseInt(value);
         } else {
             throw new UnauthorizedInputException();
