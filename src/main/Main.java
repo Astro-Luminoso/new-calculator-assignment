@@ -1,6 +1,10 @@
 package main;
+
+import main.cli.CliController;
 import main.dmo.CalculationRecord;
-import main.service.Calculator;
+import main.service.CalculatorManager;
+import main.service.CalculatorGateway;
+import main.service.CalculatorRecorder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,22 +12,16 @@ import java.util.Scanner;
 
 
 public class Main {
+
     public static void main(String[] args) {
 
-        Scanner sc = new Scanner(System.in);
         List<CalculationRecord> records = new ArrayList<>();
-        Calculator calculator = new Calculator(sc, records);
+        CalculatorRecorder recorder = new CalculatorRecorder(records);
 
-        // system exit is implemented in Calculator class
-        while (true) {
+        CliController cliController = new CliController(new Scanner(System.in));
 
-            int lhs = calculator.getOperand();
-            int rhs = calculator.getOperand();
-            char operator = calculator.getOperator();
-            CalculationRecord record = calculator.calculate(lhs, rhs, operator);
-
-            calculator.printRecord(record);
-            calculator.addRecord(record);
-        }
+        CalculatorManager<Double> calculator = new CalculatorManager<>(cliController, Double::parseDouble, recorder);
+        CalculatorGateway program = new CalculatorGateway(calculator);
+        program.run();
     }
 }
