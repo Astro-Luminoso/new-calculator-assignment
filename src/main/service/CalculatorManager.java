@@ -7,6 +7,7 @@ import main.dmo.CalculationRecord;
 import main.enumerate.OperatorType;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * 계산기 프로그램을 실제로 실행하는 클래스
@@ -102,10 +103,15 @@ public class CalculatorManager<T extends Number> {
         if (rhs == null) return;
         OperatorType operator = this.getOperator();
         if (operator == null) return;
-        CalculationRecord record = this.calculate(lhs, rhs, operator);
 
-        scanner.cliPrint(record);
-        recorder.addRecord(record);
+        try{
+            CalculationRecord record = this.calculate(lhs, rhs, operator);
+            scanner.cliPrint(record);
+            recorder.addRecord(record);
+        } catch (ArithmeticException e) {
+            scanner.cliPrint(e.getMessage());
+        }
+
     }
 
     /**
