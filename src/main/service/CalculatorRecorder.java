@@ -20,10 +20,13 @@ public class CalculatorRecorder {
 
     public void removeRecord() {
 
+        if(records.toArray().length == 0) return;
         this.records.removeFirst();
     }
 
     public List<CalculationRecord> getRecord(double upBound) {
+
+
 
         return records.stream()
                 .filter(record -> record.result() <= upBound)

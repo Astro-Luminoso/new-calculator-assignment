@@ -1,14 +1,9 @@
 
 package main.service;
 
-import main.Exception.UnauthorizedInputException;
-import main.cli.CliController;
 import main.dmo.CalculationRecord;
 import main.enumerate.OperatorType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
 import java.util.function.Function;
 
 /**
@@ -16,7 +11,8 @@ import java.util.function.Function;
  */
 public class CalculatorManager<T extends Number> {
 
-    private final CliController scanner;
+//    private final CliController scanner;
+    private final IOController controller;
     private final Function<String, T> parser;
 
     private final CalculatorRecorder recorder;
@@ -25,12 +21,12 @@ public class CalculatorManager<T extends Number> {
 
      * 클래스 Calculator 생성자
      *
-     * @param scanner 사용자 입력을 받기 위한 Scanner 객체
+     * @param controller 사용자 입력 관리를 위한 객체
      * @param parser 문자열 값을 숫자 타입으로 변환하기 위한 함수 객체
      * @param recorder 계산 기록 관리를 위한 객체
      */
-    public CalculatorManager(CliController scanner, Function<String, T> parser, CalculatorRecorder recorder) {
-        this.scanner = scanner;
+    public CalculatorManager(IOController controller, Function<String, T> parser, CalculatorRecorder recorder) {
+        this.controller = controller;
         this.recorder = recorder;
         this.parser = parser;
     }
@@ -41,19 +37,8 @@ public class CalculatorManager<T extends Number> {
      * @return 피연산자의 정수 값
      */
      private T getOperand() {
-        while(true) {
 
-            try {
-                String value = scanner.getValue("숫자를 입력하여 주시옵소서.", "^(?:-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)|#)$");
-
-                if (value.equals("#")) return null; // cancel button
-
-                return this.parser.apply(value);
-
-            } catch (UnauthorizedInputException e) {
-                System.out.println(e.getMessage());
-            }
-        }
+         return controller.loopMethod(() -> controller.returnOperandValue(parser));
     }
 
     /**
@@ -63,21 +48,7 @@ public class CalculatorManager<T extends Number> {
      */
     private OperatorType getOperator() {
 
-        OperatorType type = null;
-
-        System.out.println();
-        while (type == null) {
-            try {
-                char value = scanner.getValue("연산자를 입력하여 주시옵소서. +, -, *, / 중 하나를 입력해주시옵소서.").charAt(0);
-                if (value == '#') return null;
-
-                type = OperatorType.getOperator(value);
-            } catch (UnauthorizedInputException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-
-        return type;
+        return controller.loopMethod(controller::returnOperatorType);
     }
 
     /**
@@ -105,23 +76,27 @@ public class CalculatorManager<T extends Number> {
         if (rhs == null) return;
         OperatorType operator = this.getOperator();
         if (operator == null) return;
-        CalculationRecord record = this.calculate(lhs, rhs, operator);
 
-        scanner.cliPrint(record);
-        recorder.addRecord(record);
+        try{
+            CalculationRecord record = this.calculate(lhs, rhs, operator);
+            controller.printResult(record);
+            recorder.addRecord(record);
+        } catch (ArithmeticException e) {
+            controller.printResult(e.getMessage());
+        }
+
     }
 
     /**
      * 계산 기록을 최댓값 기준으로 조회
      */
     public void queryRecord() {
-        String value = null;
-        while (value == null) {
-             value = scanner.getValue("기록을 조회하시려면 숫자를 입력하여 주시옵소서. 입력한 숫자보다 작은 결과값을 가진 기록이 조회됩니다.", "^(?:-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)|#)$");
-        }
+
+        String value = controller.loopMethod(controller::returnQueryUpbound);
+
         if (value.equals("#")) return;
 
-        scanner.cliPrint(recorder.getRecord(Double.parseDouble(value)));
+        controller.printResult(recorder.getRecord(Double.parseDouble(value)));
     }
 
 
@@ -131,6 +106,7 @@ public class CalculatorManager<T extends Number> {
     public void deleteRecord() {
 
         this.recorder.removeRecord();
+        controller.printResult("첫 번째 기록이 삭제되었습니다.");
     }
 
     /**
@@ -140,15 +116,6 @@ public class CalculatorManager<T extends Number> {
      */
     public int getMenu() {
 
-        String value = scanner.getValue("메뉴를 입력하여 주시옵소서. 1: 계산하기, 2: 기록 보기, 3: 기록 삭제, 4: 프로그램 종료");
-
-        if(value.equals("exit"))
-            return -1;
-
-        if(value.matches("^[1-3]$")) {
-            return Integer.parseInt(value);
-        } else {
-            throw new UnauthorizedInputException();
-        }
+        return controller.loopMethod(controller::returnMenuValue);
     }
 }

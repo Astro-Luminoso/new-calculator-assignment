@@ -10,7 +10,7 @@ public enum OperatorType {
     ADDITION('+', (lhs, rhs)-> lhs + rhs),
     SUBTRACTION('-', (lhs, rhs)-> lhs - rhs),
     MULTIPLICATION('*', (lhs, rhs)-> lhs * rhs),
-    DIVISION('/', (lhs, rhs)-> lhs / rhs);
+    DIVISION('/', (lhs, rhs)-> {if(rhs == 0) throw new ArithmeticException("0으로 나눌 수 없사옵니다."); return lhs / rhs;});
 
     private final char symbol;
     private final BiFunction<Double, Double, Double> calculate;
